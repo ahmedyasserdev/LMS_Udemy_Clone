@@ -23,7 +23,7 @@ export const createCourse = async({title } : CreateCourseParams ) => {
                 });
 
 
-                return course
+                return JSON.parse(JSON.stringify(course))
 
     }catch (error) {
         console.log("[COURSES]" , error)

@@ -40,7 +40,7 @@ const CreateCoursesPage = () => {
           console.log(courseToCreate)
           form.reset();
           toast.success("course created")
-          router.push(`teacher/course/${courseToCreate.id}`);
+          router.push(`/teacher/courses/${courseToCreate.id}`);
         }
     } catch  {
       toast.error("Something went wrong")
