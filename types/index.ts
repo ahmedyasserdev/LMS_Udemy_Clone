@@ -5,3 +5,9 @@ export type SidebarItemProps = {
     label : string ;
     href  : string
 }
+
+
+
+export type CreateCourseParams = {
+    title : string ;
+}
