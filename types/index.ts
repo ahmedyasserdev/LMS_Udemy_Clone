@@ -1,4 +1,4 @@
-import { Course } from "@prisma/client";
+import { Attachment, Chapter, Course } from "@prisma/client";
 import { LucideIcon } from "lucide-react";
 
 export type SidebarItemProps = {
@@ -14,7 +14,7 @@ export type CreateCourseParams = {
 
 
 export type CoreFormProps = {
-  initialData : Course
+  initialData : Course  & {attachments?: Attachment[]} & {chapters?: Chapter[]} ;
   courseId: string;
 };
 export type  FormCategoryProps = {
@@ -24,3 +24,15 @@ export type  FormCategoryProps = {
 };
 
 export type UpdateCourseParams = { courseId: string; path: string; values: {} };
+
+export type UpdateCourseAttachmentsParams = { courseId: string; path: string; values: {url : string} };
+
+
+export type createChapterParams = {courseId : string ; title  : string}
+
+
+export type  ChapterListProps = {
+  onEdit  : (id : string) => void
+  items : Chapter[]
+  onReorder : (updateData : {id : string ; position : number;}[]) => void
+} 

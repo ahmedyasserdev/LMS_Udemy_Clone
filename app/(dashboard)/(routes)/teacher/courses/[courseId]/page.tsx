@@ -1,13 +1,20 @@
 import { IconBadge } from "@/components/shared/IconBadge";
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
-import { CircleDollarSign, LayoutDashboard, ListChecks } from "lucide-react";
+import {
+  CircleDollarSign,
+  File,
+  LayoutDashboard,
+  ListChecks,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 import FormTitle from "./_components/FormTitle";
 import FormDescription from "./_components/FormDescription";
 import FormImage from "./_components/FormImage";
 import FormCategory from "./_components/FormCategory";
 import FormPrice from "./_components/FormPrice";
+import FormAttachments from "./_components/FormAttachments";
+import FormChapters from "./_components/FormChapters";
 
 const CourseDetailsPage = async ({
   params: { courseId },
@@ -21,16 +28,24 @@ const CourseDetailsPage = async ({
   const course = await db.course.findUnique({
     where: {
       id: courseId,
+      userId
+    },
+    include: {
+      chapters : {
+        orderBy : {position : 'asc'}
+      } ,
+      attachments: {
+        orderBy : {createdAt : 'desc'}
+      },
     },
   });
+
 
   const categories = await db.category.findMany({
     orderBy: {
       name: "asc",
     },
   });
-
-  console.log(categories);
 
   if (!course) {
     return redirect("/");
@@ -42,6 +57,7 @@ const CourseDetailsPage = async ({
     course.imageUrl,
     course.price,
     course.categoryId,
+    course.chapters.some((chapter) => chapter.isPublished)
   ];
 
   const totalFields = requiredFields.length;
@@ -69,59 +85,46 @@ const CourseDetailsPage = async ({
           <FormDescription initialData={course} courseId={course.id} />
           <FormImage initialData={course} courseId={course.id} />
           <FormCategory
-              initialData={course}
-              courseId={course.id}
-              options={categories.map((category) => ({
-                label: category.name,
-                value: category.id,
-              }))}
-            />
+            initialData={course}
+            courseId={course.id}
+            options={categories.map((category) => ({
+              label: category.name,
+              value: category.id,
+            }))}
+          />
         </div>
 
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center gap-x-2">
+              <IconBadge icon={ListChecks} />
 
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex items-center gap-x-2">
-                        <IconBadge 
-                          icon = {ListChecks}
-                        />
+              <h2 className="text-x">Course Chapters</h2>
+            </div>
+          <FormChapters initialData={course} courseId={course.id} />
+            
+          </div>
 
-                        <h2 className="text-x">
-                        Course Chapters
-                        </h2>
-                      </div>
+          <div>
+            <div className="flex items-center gap-x-2">
+              <IconBadge icon={CircleDollarSign} />
 
+              <h2 className="text-x">Sell Your Course</h2>
+            </div>
 
-                    TODO: Chapters
+            <FormPrice initialData={course} courseId={course.id} />
+          </div>
 
-                    </div>
+          <div>
+            <div className="flex items-center gap-x-2">
+              <IconBadge icon={File} />
 
+              <h2 className="text-x">Resources & Attachments</h2>
+            </div>
 
-
-                    <div >
-                    <div className="flex items-center gap-x-2">
-                        <IconBadge 
-                          icon = {CircleDollarSign}
-                        />
-
-                        <h2 className="text-x">
-                        Sell Your Course
-                        </h2>
-                      </div>
-
-                      <FormPrice
-                       initialData={course}
-                       courseId={course.id}
-                      />
-
-                    </div>
-
-
-
-
-
-                  </div>
-
+            <FormAttachments initialData={course} courseId={course.id} />
+          </div>
+        </div>
       </div>
     </div>
   );
