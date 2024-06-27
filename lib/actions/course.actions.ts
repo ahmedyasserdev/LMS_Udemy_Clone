@@ -36,11 +36,11 @@ export const updateCourse = async ({
   path,
 }: UpdateCourseParams) => {
   try {
-    const { userId } = auth();
+      const { userId } = auth();
 
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
+      if (!userId) {
+        throw new Error("Unauthorized");
+      }
 
     const course = await db.course.update({
       where: {
