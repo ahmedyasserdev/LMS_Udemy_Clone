@@ -1,6 +1,6 @@
 "use client";
 
-import { CoreFormProps } from "@/types";
+import { ChapterFormProps, CoreFormProps } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -20,17 +20,18 @@ import { Pencil } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { usePathname, useRouter } from "next/navigation";
-import { updateCourse } from "@/lib/actions/course.actions";
+import { updateChapter } from "@/lib/actions/chapter.actions";
 
-const FormTitle = ({ courseId, initialData }: CoreFormProps) => {
+const ChapterFormTitle = ({ courseId, initialData , chapterId }: ChapterFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
   const pathname = usePathname()
-  const formTitleSchema = z.object({
-    title : z.string().min(1 , {message : "Title is required"})
-})
-  const form = useForm<z.infer<typeof formTitleSchema>>({
-    resolver: zodResolver(formTitleSchema),
+
+  const ChapterformTitleSchema = z.object({
+    title : z.string().min(1)
+  })
+  const form = useForm<z.infer<typeof ChapterformTitleSchema>>({
+    resolver: zodResolver(ChapterformTitleSchema),
     defaultValues: initialData,
   });
 
@@ -38,17 +39,20 @@ const FormTitle = ({ courseId, initialData }: CoreFormProps) => {
   const toggleEdit = () => {
     setIsEditing((prev) => !prev);
   };
-  const onSubmit = async (values: z.infer<typeof formTitleSchema>) => {
+  const onSubmit = async (values: z.infer<typeof ChapterformTitleSchema>) => {
     try {
 
-      const courseToUpdate = await updateCourse({courseId , values , path : pathname});
+      const chapterToUpdate = await updateChapter({ chapterId  , courseId , values , path : pathname});
 
-      if (courseToUpdate) {
+      if (chapterToUpdate) {
         toggleEdit();
         form.reset();
-        toast.success("Course updated successfully")
+        toast.success("Chapter updated successfully")
         router.refresh()
       }
+
+
+      // TODO: Handle video upload
       
     } catch (error) {
           toast.error("something went wrong")
@@ -60,7 +64,7 @@ const FormTitle = ({ courseId, initialData }: CoreFormProps) => {
   return (
     <div className="mt-6 border bg-slate-100  rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
-        Course Title
+        Chpater Title
         <Button onClick={toggleEdit} variant={"ghost"}>
           {isEditing ? (
             <>Cancel</>
@@ -93,7 +97,7 @@ const FormTitle = ({ courseId, initialData }: CoreFormProps) => {
                       <FormItem>
                         <FormLabel>title</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g 'Advaned web development'"
+                          <Input placeholder="e.g 'Introduction to the course'"
                             disabled = {isSubmitting}
                           {...field} />
                         </FormControl>
@@ -120,4 +124,4 @@ const FormTitle = ({ courseId, initialData }: CoreFormProps) => {
   );
 };
 
-export default FormTitle;
+export default ChapterFormTitle;

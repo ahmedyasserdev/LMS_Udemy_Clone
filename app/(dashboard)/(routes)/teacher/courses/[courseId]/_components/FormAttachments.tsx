@@ -14,11 +14,14 @@ import {
   updateCourseAttachments,
   DeleteAttachment,
 } from "@/lib/actions/course.actions";
-import Image from "next/image";
 import FileUploader from "@/components/shared/FileUploader";
-import { Attachment } from "@prisma/client";
+import { Attachment, Course } from "@prisma/client";
+type AttachmentFormProps = {
+  initialData: Course & { attachments?: Attachment[] };
+  courseId: string;
+}
 
-const FormAttachments = ({ courseId, initialData }: CoreFormProps) => {
+const FormAttachments = ({ courseId, initialData }: AttachmentFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const router = useRouter();

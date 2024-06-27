@@ -22,7 +22,7 @@ const DropDown = ({ options, onChange, value }: DropDownProps) => {
         <SelectContent >
           {options.length > 0 &&
             options.map((option) => (
-              <SelectItem value={option.value}>{option.label}</SelectItem>
+              <SelectItem  key = {option.value} value={option.value}>{option.label}</SelectItem>
             ))}
         </SelectContent>
       </Select>

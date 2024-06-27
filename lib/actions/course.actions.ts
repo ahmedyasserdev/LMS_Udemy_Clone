@@ -1,6 +1,5 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "../db";
 import {
   CreateCourseParams,
@@ -8,14 +7,11 @@ import {
   UpdateCourseAttachmentsParams,
 } from "@/types";
 import { revalidatePath } from "next/cache";
+import { handleAuthorization } from "../utils";
 
 export const createCourse = async ({ title }: CreateCourseParams) => {
   try {
-    const { userId } = auth();
-
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
+    const userId = await   handleAuthorization()
 
     const course = await db.course.create({
       data: {
@@ -36,11 +32,7 @@ export const updateCourse = async ({
   path,
 }: UpdateCourseParams) => {
   try {
-    const { userId } = auth();
-
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
+  const userId = await   handleAuthorization()
 
     const course = await db.course.update({
       where: {
@@ -66,18 +58,7 @@ export const updateCourseAttachments = async ({
   path,
 }: UpdateCourseAttachmentsParams) => {
   try {
-    const { userId } = auth();
-
-    if (!userId) throw new Error("Unauthorized");
-
-    const courseOwner = await db.course.findUnique({
-      where: {
-        id: courseId,
-        userId,
-      },
-    });
-
-    if (!courseOwner) throw new Error("Unauthorized");
+    await handleAuthorization(courseId)
 
     const attachment = await db.attachment.create({
       data: {
@@ -99,19 +80,8 @@ export const updateCourseAttachments = async ({
 
 export const DeleteAttachment = async ({attachId  , courseId} : {attachId: string  , courseId  :string  }) => {
   try {
-    const { userId } = auth();
+    await handleAuthorization(courseId)
 
-    if (!userId) throw new Error("Unauthorized");
-
-
-const courseOwner = await db.course.findUnique({
-      where: {
-        id: courseId,
-        userId,
-      },
-    });
-
-    if (!courseOwner) throw new Error("Unauthorized");
 
       const attachmentToDelete = await db.attachment.delete({
         where : {

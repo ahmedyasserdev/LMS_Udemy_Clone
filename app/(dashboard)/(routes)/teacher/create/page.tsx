@@ -16,13 +16,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { courseFormSchema } from "@/lib/validations/courseFormSchema";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { createCourse } from "@/lib/actions/course.actions";
 
 const CreateCoursesPage = () => {
   const router = useRouter()
+  const courseFormSchema = z.object({
+    title: z.string().min(1, {
+        message: "Title is required"
+})
+
+})
   const form = useForm<z.infer<typeof courseFormSchema>>({
     resolver: zodResolver(courseFormSchema),
     defaultValues: {

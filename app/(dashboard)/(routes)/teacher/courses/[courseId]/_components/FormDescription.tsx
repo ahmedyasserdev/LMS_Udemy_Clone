@@ -21,7 +21,6 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { usePathname, useRouter } from "next/navigation";
 import { updateCourse } from "@/lib/actions/course.actions";
-import { formDescriptionSchema } from "@/lib/validations/formDescriptionSchema";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -29,13 +28,15 @@ const FormDescription = ({ courseId, initialData }: CoreFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
   const pathname = usePathname()
+  const formDescriptionSchema = z.object({
+  description : z.string().min(1 , {message : "Description is required"})
+})
   const form = useForm<z.infer<typeof formDescriptionSchema>>({
     resolver: zodResolver(formDescriptionSchema),
     defaultValues: {
       description : initialData.description || ''
     },
   });
-
   const { isSubmitting, isValid } = form.formState;
   const toggleEdit = () => {
     setIsEditing((prev) => !prev);

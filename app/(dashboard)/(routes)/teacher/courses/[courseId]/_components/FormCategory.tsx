@@ -21,8 +21,6 @@ import toast from "react-hot-toast";
 import { usePathname, useRouter } from "next/navigation";
 import { updateCourse } from "@/lib/actions/course.actions";
 import { cn } from "@/lib/utils";
-import { formCategorySchema } from "@/lib/validations/FormCategorySchema";
-import { Combobox } from "@/components/ui/combobox";
 import DropDown from "@/components/shared/DropDown";
 
 const FormCategory = ({
@@ -33,7 +31,9 @@ const FormCategory = ({
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-
+   const formCategorySchema = z.object({
+    categoryId : z.string().min(1)
+})
   const form = useForm<z.infer<typeof formCategorySchema>>({
     resolver: zodResolver(formCategorySchema),
     defaultValues: {

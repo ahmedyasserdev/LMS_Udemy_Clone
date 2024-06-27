@@ -1,6 +1,6 @@
 "use client";
 
-import { CoreFormProps } from "@/types";
+import { ChapterFormProps, CoreFormProps } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -12,41 +12,44 @@ import {
   FormDescription,
   FormField,
   FormItem,
-  FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { usePathname, useRouter } from "next/navigation";
-import { updateCourse } from "@/lib/actions/course.actions";
+import { cn } from "@/lib/utils";
+import { updateChapter } from "@/lib/actions/chapter.actions";
+import { Checkbox } from "@/components/ui/checkbox";
 
-const FormTitle = ({ courseId, initialData }: CoreFormProps) => {
+const ChapterAccessForm = ({ courseId, initialData , chapterId }: ChapterFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
   const pathname = usePathname()
-  const formTitleSchema = z.object({
-    title : z.string().min(1 , {message : "Title is required"})
-})
-  const form = useForm<z.infer<typeof formTitleSchema>>({
-    resolver: zodResolver(formTitleSchema),
-    defaultValues: initialData,
+  const chapterAccessFormSchema = z.object({
+    isFree : z.boolean().default(false)
+  })
+  const form = useForm<z.infer<typeof chapterAccessFormSchema>>({
+    resolver: zodResolver(chapterAccessFormSchema),
+    defaultValues: {
+        isFree: !!initialData.isFree
+    },
   });
 
   const { isSubmitting, isValid } = form.formState;
   const toggleEdit = () => {
     setIsEditing((prev) => !prev);
   };
-  const onSubmit = async (values: z.infer<typeof formTitleSchema>) => {
+ 
+  const onSubmit = async (values: z.infer<typeof chapterAccessFormSchema>) => {
     try {
 
-      const courseToUpdate = await updateCourse({courseId , values , path : pathname});
+      const chapterToUpdate = await updateChapter({courseId  , chapterId, values , path : pathname});
 
-      if (courseToUpdate) {
+      if (chapterToUpdate) {
         toggleEdit();
         form.reset();
-        toast.success("Course updated successfully")
+        toast.success("Chpater updated successfully")
         router.refresh()
       }
       
@@ -60,26 +63,32 @@ const FormTitle = ({ courseId, initialData }: CoreFormProps) => {
   return (
     <div className="mt-6 border bg-slate-100  rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
-        Course Title
+        Chapter access
         <Button onClick={toggleEdit} variant={"ghost"}>
           {isEditing ? (
             <>Cancel</>
           ) : (
             <>
               <Pencil className="h-4 w-4 mr-2" />
-              Edit
+              Edit access
             </>
           )}
         </Button>
       </div>
 
-            {
-              !isEditing && (
-                <p className="text-sm mt-2">{initialData.title}</p>
-              )
-            }
-
-
+      {!isEditing && (
+        <p className={cn(
+          "text-sm mt-2",
+          !initialData.isFree && "text-slate-700 italic dark:text-slate-300"
+        )}>
+     
+          {initialData.isFree ? (
+            <>This chapter is available for free preview</>
+          ) : (
+            <>This chapter is not free.</>
+          )}
+        </p>
+      )}
 
 
             {
@@ -88,17 +97,20 @@ const FormTitle = ({ courseId, initialData }: CoreFormProps) => {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
                   <FormField
                     control={form.control}
-                    name="title"
+                    name="isFree"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>title</FormLabel>
+                        <FormItem className="flex flex-row items-start space-x-3">
                         <FormControl>
-                          <Input placeholder="e.g 'Advaned web development'"
-                            disabled = {isSubmitting}
-                          {...field} />
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange = {field.onChange}
+                          />
                         </FormControl>
-                     
-                        <FormMessage />
+                        <div className="space-y-1 leading-none">
+                          <FormDescription>
+                              Check this box if you want to make this chapter free for preview.
+                          </FormDescription>
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -120,4 +132,4 @@ const FormTitle = ({ courseId, initialData }: CoreFormProps) => {
   );
 };
 
-export default FormTitle;
+export default ChapterAccessForm;
