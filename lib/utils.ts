@@ -34,3 +34,6 @@ export const handleAuthorization = async (courseId?: string) => {
 
   return userId;
 };
+
+
+export const convertFileToUrl = (file: File) => URL.createObjectURL(file)

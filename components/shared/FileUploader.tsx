@@ -1,28 +1,32 @@
-'use client'
 
-import { ourFileRouter } from "@/app/api/uploadthing/core";
-import { UploadDropzone } from "@/lib/uploadthing"
+"use client";
+
 import toast from "react-hot-toast";
 
+import { UploadDropzone } from "@/lib/uploadthing";
+import { ourFileRouter } from "@/app/api/uploadthing/core";
 
-type FileUploadProps = {
-    onChange: (url? : string) => void;
-    endpoint : keyof typeof ourFileRouter
-}
+interface FileUploadProps {
+  onChange: (url?: string, originalFilename?: string) => void;
+  endpoint: keyof typeof ourFileRouter;
+};
 
-const FileUploader = ({onChange , endpoint} : FileUploadProps) => {
+ const FileUploader = ({
+  onChange,
+  endpoint
+}: FileUploadProps) => {
+
   return (
     <UploadDropzone
-        endpoint= {endpoint}
-        onClientUploadComplete={(res) => {
-            onChange(res?.[0].url)
-        }}
-
-        onUploadError={(error : Error )=> {
-          toast.error(`${error?.message}`)
-        }}
-    />  
-  )
+      endpoint={endpoint}
+      onClientUploadComplete={(res) => {
+        console.log("onClientUploadComplete res:", res);
+        onChange(res?.[0].url, res?.[0].name);
+      }}
+      onUploadError={(error: Error) => {
+        toast.error(`${error?.message}`);
+      }}
+    />
+  );
 }
-
-export default FileUploader
+export default  FileUploader
