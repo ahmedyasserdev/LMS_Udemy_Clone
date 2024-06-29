@@ -8,6 +8,20 @@ import {
   UpdateCourseAttachmentsParams,
 } from "@/types";
 import { revalidatePath } from "next/cache";
+import Mux from "@mux/mux-node";
+import { handleAuthorization } from "../utils";
+import { z } from "zod";
+
+
+
+const courseSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  imageUrl: z.string().min(1), 
+  categoryId: z.string(), 
+
+});
+
 
 export const createCourse = async ({ title }: CreateCourseParams) => {
   try {
@@ -36,11 +50,11 @@ export const updateCourse = async ({
   path,
 }: UpdateCourseParams) => {
   try {
-      const { userId } = auth();
+    const { userId } = auth();
 
-      if (!userId) {
-        throw new Error("Unauthorized");
-      }
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
 
     const course = await db.course.update({
       where: {
@@ -82,7 +96,7 @@ export const updateCourseAttachments = async ({
     const attachment = await db.attachment.create({
       data: {
         url: values.url,
-        name: values.url?.split("/").pop() || '',
+        name: values.url?.split("/").pop() || "",
         courseId,
       },
     });
@@ -95,16 +109,19 @@ export const updateCourseAttachments = async ({
   }
 };
 
-
-
-export const DeleteAttachment = async ({attachId  , courseId} : {attachId: string  , courseId  :string  }) => {
+export const DeleteAttachment = async ({
+  attachId,
+  courseId,
+}: {
+  attachId: string;
+  courseId: string;
+}) => {
   try {
     const { userId } = auth();
 
     if (!userId) throw new Error("Unauthorized");
 
-
-const courseOwner = await db.course.findUnique({
+    const courseOwner = await db.course.findUnique({
       where: {
         id: courseId,
         userId,
@@ -113,19 +130,154 @@ const courseOwner = await db.course.findUnique({
 
     if (!courseOwner) throw new Error("Unauthorized");
 
-      const attachmentToDelete = await db.attachment.delete({
-        where : {
-          id : attachId ,
-          courseId
+    const attachmentToDelete = await db.attachment.delete({
+      where: {
+        id: attachId,
+        courseId,
+      },
+    });
+
+    return JSON.parse(JSON.stringify(attachmentToDelete));
+  } catch (error) {
+    console.log("[DELETE_COURSE_ATTACHMENTS]", error);
+  }
+};
+
+const { video } = new Mux({
+  tokenId: process.env.MUX_TOKEN_ID!,
+  tokenSecret: process.env.MUX_TOKEN_SECRET!,
+});
+
+export const deleteCourse = async (courseId: string) => {
+  try {
+    const userId = await handleAuthorization();
+
+    const course = await db.course.findUnique({
+      where: { id: courseId, userId },
+      include: {
+        chapters: {
+          include: { muxData: true },
+        },
+      },
+    }); 
+
+
+    if (!course) throw new Error("Not Found")
+
+      for (const chapter of course.chapters) {
+        if (chapter.muxData?.assetId) {
+          await video.assets.delete(chapter?.muxData.assetId)
         }
+      }
+
+
+      const deleltedCourse = await db.course.delete({
+        where : {id : courseId, }
       })
 
 
 
-      return JSON.parse(JSON.stringify(attachmentToDelete))
+      return JSON.parse(JSON.stringify(deleltedCourse))
+
+
+
 
   } catch (error) {
-    console.log("[DELETE_COURSE_ATTACHMENTS]", error);
+    console.log("[DELETE_COURSE]", error);
+  }
+};
+
+
+export const publishCourse  = async (courseId : string) => {
+    try{
+  const userId = await handleAuthorization();
+
+      const course = await db.course.findUnique({
+        where : {
+          id  :courseId ,
+          userId,
+        },
+        include : {
+          chapters : {
+            include : {
+              muxData : true
+            }
+          }
+        }
+      })
+
+
+    if (!course) throw new Error("Not Found")
+
+
+      const hasPublishedChapter = course.chapters.some((chapter) => chapter.isPublished)
+
+  const coursePublishingValidation = courseSchema.safeParse(course)
+    if (!coursePublishingValidation.success || !hasPublishedChapter) {
+        throw new Error("Missing Required Fields")
+    }
+
+
+
+    const courseToPublish = await db.course.update({
+      where : {
+        id : courseId,
+        userId
+      },
+      data : {
+        isPublished : true
+      }
+    })
+
+
+      return JSON.parse(JSON.stringify(courseToPublish))
+    }catch (error) {  
+    console.log("[PUBLISH_COURSE]", error);
+
+    }
+}
+
+
+
+
+export const unpublishCourse = async (courseId : string) => {
+  try{
+    const userId =       await handleAuthorization();
+  
+        const course = await db.course.findUnique({
+          where : {
+            id  :courseId ,
+            userId,
+          },
+          
+        })
+  
+  
+      if (!course) throw new Error("Not Found")
+  
+  
+  
+    const coursePublishingValidation = courseSchema.safeParse(course)
+      if (!coursePublishingValidation.success ) {
+          throw new Error("Missing Required Fields")
+      }
+  
+  
+  
+      const courseToUnpublish = await db.course.update({
+        where : {
+          id : courseId,
+          userId
+        },
+        data : {
+          isPublished : false
+        }
+      })
+  
+  
+        return JSON.parse(JSON.stringify(courseToUnpublish))
+      }catch (error) {
+  console.log("[UNPUBLISH_COURSE]", error);
 
   }
 }
