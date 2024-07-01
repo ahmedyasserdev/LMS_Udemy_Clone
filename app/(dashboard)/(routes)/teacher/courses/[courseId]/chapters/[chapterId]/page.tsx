@@ -53,7 +53,7 @@ const ChapterIdPage = async ({
         )
       }
 
-      <section className="p-6 overflow-hidden">
+      <section className="p-6 overflow-x-hidden">
           <div className="w-full flex  items-center justify-between">
            <div>
              <Link
