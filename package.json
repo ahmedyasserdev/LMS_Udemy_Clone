@@ -27,7 +27,6 @@
     "@tanstack/react-table": "^8.17.3",
     "@uploadthing/react": "^6.6.0",
     "add": "^2.0.6",
-    "axios": "^1.7.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -45,8 +44,7 @@
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
     "uploadthing": "^6.12.0",
-    "zod": "^3.23.8",
-    "zustand": "^4.5.4"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20",

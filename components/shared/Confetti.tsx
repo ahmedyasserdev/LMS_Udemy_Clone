@@ -1,13 +1,14 @@
 "use client";
 
-import { useConfettiStore } from "@/hooks/use-confetti-stoe";
+import  useConfettiStore  from "@/context/confetti-context";
+import { useContext } from "react";
 import ReactConfetti from "react-confetti";
 
 
-export const ConfettiProvider = () => {
-  const confetti = useConfettiStore();
+export const Confetti = () => {
+  const {isOpen , setIsOpen} = useContext(useConfettiStore);
 
-  if (!confetti.isOpen) return null;
+  if (!isOpen) return null;
 
   return (
     <ReactConfetti
@@ -15,7 +16,7 @@ export const ConfettiProvider = () => {
       numberOfPieces={500}
       recycle={false}
       onConfettiComplete={() => {
-        confetti.onClose();
+        setIsOpen(false)
       }}
     />
   )

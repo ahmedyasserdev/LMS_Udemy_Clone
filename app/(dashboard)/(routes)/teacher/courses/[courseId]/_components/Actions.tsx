@@ -2,11 +2,11 @@
 
 import { ConfirmModal } from "@/components/shared/modals/ConfirmModal";
 import { Button } from "@/components/ui/button";
-import { useConfettiStore } from "@/hooks/use-confetti-stoe";
+import confettiContext from "@/context/confetti-context";
 import { deleteCourse, publishCourse, unpublishCourse } from "@/lib/actions/course.actions";
 import { Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import toast from "react-hot-toast";
 type ActionsProps = {
   isPublished: boolean;
@@ -20,7 +20,7 @@ const Actions = ({
   courseId,
 }: ActionsProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const  confetti = useConfettiStore()
+  const  { setIsOpen} = useContext(confettiContext)
   const router = useRouter();
   const onDelete = async () => {
     try {
@@ -52,7 +52,7 @@ const Actions = ({
         await publishCourse(courseId);
         router.refresh()
         toast.success("Course Published")
-        confetti.onOpen()
+          setIsOpen(true)
       }
       
     } catch (error) {

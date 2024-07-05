@@ -1,4 +1,4 @@
-import { Attachment, Chapter, Course, MuxData } from "@prisma/client";
+import { Attachment, Chapter, Category , Course, MuxData } from "@prisma/client";
 import { LucideIcon } from "lucide-react";
 
 export type SidebarItemProps = {
@@ -51,4 +51,12 @@ export type  ChapterFormProps  = {
   initialData: Chapter & {muxData ?:MuxData | null} ;
   courseId: string;
   chapterId: string;
+};
+
+
+
+export type CourseWithProgressWithCategory = Course & {
+  category: Category | null;
+  chapters: { id: string }[];
+  progress: number | null;
 };

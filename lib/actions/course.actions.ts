@@ -1,5 +1,7 @@
 "use server";
 
+
+import { CourseWithProgressWithCategory } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "../db";
 import {
@@ -11,25 +13,18 @@ import { revalidatePath } from "next/cache";
 import Mux from "@mux/mux-node";
 import { handleAuthorization } from "../utils";
 import { z } from "zod";
-
-
+import { getProgress } from "./get-progress";
 
 const courseSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
-  imageUrl: z.string().min(1), 
-  categoryId: z.string(), 
-
+  imageUrl: z.string().min(1),
+  categoryId: z.string(),
 });
-
 
 export const createCourse = async ({ title }: CreateCourseParams) => {
   try {
-    const { userId } = auth();
-
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
+    const userId = await handleAuthorization();
 
     const course = await db.course.create({
       data: {
@@ -50,11 +45,7 @@ export const updateCourse = async ({
   path,
 }: UpdateCourseParams) => {
   try {
-    const { userId } = auth();
-
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
+    const userId = await handleAuthorization();
 
     const course = await db.course.update({
       where: {
@@ -80,18 +71,7 @@ export const updateCourseAttachments = async ({
   path,
 }: UpdateCourseAttachmentsParams) => {
   try {
-    const { userId } = auth();
-
-    if (!userId) throw new Error("Unauthorized");
-
-    const courseOwner = await db.course.findUnique({
-      where: {
-        id: courseId,
-        userId,
-      },
-    });
-
-    if (!courseOwner) throw new Error("Unauthorized");
+    await handleAuthorization(courseId);
 
     const attachment = await db.attachment.create({
       data: {
@@ -117,18 +97,7 @@ export const DeleteAttachment = async ({
   courseId: string;
 }) => {
   try {
-    const { userId } = auth();
-
-    if (!userId) throw new Error("Unauthorized");
-
-    const courseOwner = await db.course.findUnique({
-      where: {
-        id: courseId,
-        userId,
-      },
-    });
-
-    if (!courseOwner) throw new Error("Unauthorized");
+    await handleAuthorization(courseId);
 
     const attachmentToDelete = await db.attachment.delete({
       where: {
@@ -159,125 +128,171 @@ export const deleteCourse = async (courseId: string) => {
           include: { muxData: true },
         },
       },
-    }); 
+    });
 
+    if (!course) throw new Error("Not Found");
 
-    if (!course) throw new Error("Not Found")
-
-      for (const chapter of course.chapters) {
-        if (chapter.muxData?.assetId) {
-          await video.assets.delete(chapter?.muxData.assetId)
-        }
+    for (const chapter of course.chapters) {
+      if (chapter.muxData?.assetId) {
+        await video.assets.delete(chapter?.muxData.assetId);
       }
+    }
 
+    const deleltedCourse = await db.course.delete({
+      where: { id: courseId },
+    });
 
-      const deleltedCourse = await db.course.delete({
-        where : {id : courseId, }
-      })
-
-
-
-      return JSON.parse(JSON.stringify(deleltedCourse))
-
-
-
-
+    return JSON.parse(JSON.stringify(deleltedCourse));
   } catch (error) {
     console.log("[DELETE_COURSE]", error);
   }
 };
 
+export const publishCourse = async (courseId: string) => {
+  try {
+    const userId = await handleAuthorization();
 
-export const publishCourse  = async (courseId : string) => {
-    try{
-  const userId = await handleAuthorization();
-
-      const course = await db.course.findUnique({
-        where : {
-          id  :courseId ,
-          userId,
+    const course = await db.course.findUnique({
+      where: {
+        id: courseId,
+        userId,
+      },
+      include: {
+        chapters: {
+          include: {
+            muxData: true,
+          },
         },
-        include : {
-          chapters : {
-            include : {
-              muxData : true
-            }
-          }
-        }
-      })
+      },
+    });
 
+    if (!course) throw new Error("Not Found");
 
-    if (!course) throw new Error("Not Found")
+    const hasPublishedChapter = course.chapters.some(
+      (chapter) => chapter.isPublished
+    );
 
-
-      const hasPublishedChapter = course.chapters.some((chapter) => chapter.isPublished)
-
-  const coursePublishingValidation = courseSchema.safeParse(course)
+    const coursePublishingValidation = courseSchema.safeParse(course);
     if (!coursePublishingValidation.success || !hasPublishedChapter) {
-        throw new Error("Missing Required Fields")
+      throw new Error("Missing Required Fields");
     }
-
-
 
     const courseToPublish = await db.course.update({
-      where : {
-        id : courseId,
-        userId
+      where: {
+        id: courseId,
+        userId,
       },
-      data : {
-        isPublished : true
-      }
-    })
+      data: {
+        isPublished: true,
+      },
+    });
 
-
-      return JSON.parse(JSON.stringify(courseToPublish))
-    }catch (error) {  
+    return JSON.parse(JSON.stringify(courseToPublish));
+  } catch (error) {
     console.log("[PUBLISH_COURSE]", error);
+  }
+};
 
+export const unpublishCourse = async (courseId: string) => {
+  try {
+    const userId = await handleAuthorization();
+
+    const course = await db.course.findUnique({
+      where: {
+        id: courseId,
+        userId,
+      },
+    });
+
+    if (!course) throw new Error("Not Found");
+
+    const coursePublishingValidation = courseSchema.safeParse(course);
+    if (!coursePublishingValidation.success) {
+      throw new Error("Missing Required Fields");
     }
-}
+
+    const courseToUnpublish = await db.course.update({
+      where: {
+        id: courseId,
+        userId,
+      },
+      data: {
+        isPublished: false,
+      },
+    });
+
+    return JSON.parse(JSON.stringify(courseToUnpublish));
+  } catch (error) {
+    console.log("[UNPUBLISH_COURSE]", error);
+  }
+};
 
 
 
 
-export const unpublishCourse = async (courseId : string) => {
-  try{
-    const userId =       await handleAuthorization();
-  
-        const course = await db.course.findUnique({
-          where : {
-            id  :courseId ,
-            userId,
-          },
-          
-        })
-  
-  
-      if (!course) throw new Error("Not Found")
-  
-  
-  
-    const coursePublishingValidation = courseSchema.safeParse(course)
-      if (!coursePublishingValidation.success ) {
-          throw new Error("Missing Required Fields")
-      }
-  
-  
-  
-      const courseToUnpublish = await db.course.update({
-        where : {
-          id : courseId,
-          userId
+
+type GetCourses = {
+  userId: string;
+  title?: string;
+  categoryId?: string;
+};
+
+
+export const getCourses = async ({
+  userId,
+  title,
+  categoryId
+}: GetCourses)  => {
+  try {
+    const courses = await db.course.findMany({
+      where : {
+        isPublished : true ,
+        title : {contains : title},
+        categoryId
+      },
+
+      include : {
+        category : true ,
+        chapters :{
+          where : {isPublished : true},
+          select : {id : true}
         },
-        data : {
-          isPublished : false
+        purchases : {
+          where : {userId}
+        },
+      },
+
+      orderBy : {
+        createdAt : "desc"
+      }
+    });
+
+
+    const coursesWithProgress  = await Promise.all(
+      courses.map(async course => {
+        if (course.purchases.length ===0 ) {
+          return {
+            ...course,
+            purchases : null
+          }
+        }
+
+
+        const progressPercentage = await getProgress({userId , courseId :  course.id})
+
+        return {
+          ...course ,
+          userProgress :  progressPercentage
         }
       })
-  
-  
-        return JSON.parse(JSON.stringify(courseToUnpublish))
-      }catch (error) {
-  console.log("[UNPUBLISH_COURSE]", error);
+    )
+
+   return  coursesWithProgress
+   
+
+  }catch (error){
+    console.log("[GET_COURSES]", error);
+    return []
 
   }
 }

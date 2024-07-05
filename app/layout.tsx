@@ -3,7 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ToastProvider } from "@/components/providers/toasterProvider";
-import { ConfettiProvider } from "@/components/providers/confettiPorvider";
+import { ConfettiStoreProvider } from "@/components/providers/confettiStoreProvider";
+import { Confetti } from "@/components/shared/Confetti";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,14 +20,17 @@ export default function RootLayout({
 }>) {
   return (
      <ClerkProvider>
+      <ConfettiStoreProvider>
+
     <html lang="en">
        <body className={inter.className}>
-        <ConfettiProvider />
+        <Confetti />
           <ToastProvider />
         
         {children}
         </body>
     </html>
+      </ConfettiStoreProvider>
      </ClerkProvider>
   );
 }
