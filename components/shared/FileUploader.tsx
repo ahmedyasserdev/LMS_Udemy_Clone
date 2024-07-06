@@ -1,40 +1,36 @@
-
 "use client";
 
-import toast from "react-hot-toast";
+import { CldUploadWidget } from "next-cloudinary";
+import { Button } from "../ui/button";
+import { Plus } from "lucide-react";
 
-import { UploadDropzone } from "@/lib/uploadthing";
-import { ourFileRouter } from "@/app/api/uploadthing/core";
-
-interface FileUploadProps {
+interface FileUploaderProps {
   onChange: (url?: string,) => void;
-  endpoint: keyof typeof ourFileRouter;
+  label  : string ;
 };
 
 const FileUploader = ({
   onChange,
-  endpoint
-}: FileUploadProps) => {
+  label 
+}: FileUploaderProps) => {
 
-  const handleClientUploadComplete = (res : any) => {
-    if (res && res.length > 0) {
-      console.log(res , "uploaded")
-      onChange(res[0].url);
-    } else {
-      console.error('Unexpected response from Uploadthing:', res);
-    }
-  };
-
-  const handleUploadError = (error: Error) => {
-    toast.error(error.message);
+ 
+  const onUpload = (result: any) => {
+    onChange(result.info.secure_url);
+    console.log(result)
   };
 
   return (
-    <UploadDropzone
-      endpoint={endpoint}
-      onClientUploadComplete={handleClientUploadComplete}
-      onUploadError={handleUploadError}
-    />
+    <CldUploadWidget uploadPreset="gbuzpxkh" onUpload={onUpload}>
+    {({ open }) => {
+      return (
+        <Button type="button"  variant = "outline" onClick={() => open()} className="">
+          <Plus className="h-4 w-4 mr-2" />
+            {label}
+        </Button>
+      );
+    }}
+  </CldUploadWidget>
   );
 };
 

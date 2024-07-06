@@ -13,7 +13,15 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import FileUploader from "@/components/shared/FileUploader";
 import { updateChapter } from "@/lib/actions/chapter.actions";
-
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 const ChapterFormVideo = ({ courseId, initialData  , chapterId}: ChapterFormProps  ) => {
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
@@ -22,8 +30,12 @@ const ChapterFormVideo = ({ courseId, initialData  , chapterId}: ChapterFormProp
    const ChapterformVideoSchema = z.object({
     videoUrl: z.string().min(1, ),
   });
+  const form = useForm<z.infer<typeof ChapterformVideoSchema>>({
+    resolver: zodResolver(ChapterformVideoSchema),
+    //@ts-ignore
+    defaultValues:  initialData.videoUrl || '',
+  });
   
-
   const toggleEdit = () => {
     setIsEditing((prev) => !prev);
   };
@@ -35,6 +47,7 @@ const ChapterFormVideo = ({ courseId, initialData  , chapterId}: ChapterFormProp
         values,
         path: pathname,
       });
+      console.log(values)
 
       if (courseToUpdate) {
         toggleEdit();
@@ -89,12 +102,30 @@ const ChapterFormVideo = ({ courseId, initialData  , chapterId}: ChapterFormProp
 
       {isEditing && (
        <div>
-        <FileUploader
-          endpoint = "chapterVideo"
-          onChange = {(url) => {
-            if (url) {onSubmit({videoUrl: url})}
-          } }
-        />
+             <Form {...form} >
+           <form onSubmit={form.handleSubmit(onSubmit)} className = "flex items-center jusitfy-center gap-y-4 flex-col">
+            <FormField
+            control={form.control}
+            name="videoUrl"
+            render={({ field }) => (
+              <FormItem>
+             
+                <FormControl>
+                  <FileUploader
+                      onChange={(url) => field.onChange(url)}
+                  label = "upload your video"
+                  />
+                </FormControl>
+                <FormMessage className="text-red-1" />
+              </FormItem>
+            )}
+          />
+           <Button type="submit"  className = "w-full" >
+              Save
+            </Button>
+          </form>
+            </Form>
+
 
             <div className="text-xs text-muted-foreground mt-4"> Upload this chatper&apos; vidoe</div>
 

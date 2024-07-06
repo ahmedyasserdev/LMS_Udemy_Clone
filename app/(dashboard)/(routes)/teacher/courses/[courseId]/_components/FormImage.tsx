@@ -5,7 +5,13 @@ import { CoreFormProps } from "@/types";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
-
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { ImageIcon, Pencil, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -13,6 +19,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { updateCourse } from "@/lib/actions/course.actions";
 import Image from "next/image";
 import FileUploader from "@/components/shared/FileUploader";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 const FormImage = ({ courseId, initialData }: CoreFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -23,6 +31,13 @@ const FormImage = ({ courseId, initialData }: CoreFormProps) => {
     imageUrl: z.string().min(1, {
       message: "Image is required",
     }),
+  });
+
+
+  const form = useForm<z.infer<typeof formImageSchema>>({
+    resolver: zodResolver(formImageSchema),
+    //@ts-ignore
+    defaultValues:  initialData.imageUrl || '',
   });
   
 
@@ -89,14 +104,30 @@ const FormImage = ({ courseId, initialData }: CoreFormProps) => {
       )}
 
       {isEditing && (
-       <div>
-        <FileUploader
-          endpoint = "courseImage"
-          onChange = {(url) => {
-            if (url) {onSubmit({imageUrl: url})}
-          } }
-        />
-
+       <div  >
+           <Form {...form} >
+           <form onSubmit={form.handleSubmit(onSubmit)} className = "flex items-center jusitfy-center gap-y-4 flex-col">
+            <FormField
+            control={form.control}
+            name="imageUrl"
+            render={({ field }) => (
+              <FormItem>
+             
+                <FormControl>
+                  <FileUploader
+                    onChange={(url : any) => field.onChange(url)}
+                  label = "upload an image"
+                  />
+                </FormControl>
+                <FormMessage className="text-red-1" />
+              </FormItem>
+            )}
+          />
+           <Button type="submit" className="w-full" >
+             Save
+            </Button>
+          </form>
+            </Form>
             <div className="text-xs text-muted-foreground mt-4">16:9 aspcet ratio recommended </div>
 
 
@@ -107,3 +138,6 @@ const FormImage = ({ courseId, initialData }: CoreFormProps) => {
 };
 
 export default FormImage;
+
+
+

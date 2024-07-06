@@ -5,6 +5,8 @@ import { CoreFormProps } from "@/types";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 import { File, ImageIcon, Loader2, Pencil, PlusCircle, X } from "lucide-react";
 import { useState } from "react";
@@ -14,6 +16,13 @@ import {
   updateCourseAttachments,
   DeleteAttachment,
 } from "@/lib/actions/course.actions";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import FileUploader from "@/components/shared/FileUploader";
 import { Attachment, Course } from "@prisma/client";
 type AttachmentFormProps = {
@@ -27,8 +36,16 @@ const FormAttachments = ({ courseId, initialData }: AttachmentFormProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const formAttachmentsSchema = z.object({
-    url: z.string().min(1),
+    url: z.string().min(1 , {message : 'upload one attachment '})
   });
+
+
+  const form = useForm<z.infer<typeof formAttachmentsSchema>>({
+    resolver: zodResolver(formAttachmentsSchema),
+    //@ts-ignore
+    defaultValues:  initialData.attachments.map((attachment) => attachment.url) || '',
+  });
+
   const toggleEdit = () => {
     setIsEditing((prev) => !prev);
   };
@@ -127,14 +144,30 @@ const FormAttachments = ({ courseId, initialData }: AttachmentFormProps) => {
 
       {isEditing && (
         <div>
-          <FileUploader
-            endpoint="courseAttachment"
-            onChange={(url) => {
-              if (url) {
-                onSubmit({ url: url });
-              }
-            }}
+             <Form {...form} >
+           <form onSubmit={form.handleSubmit(onSubmit)} className = "flex items-center jusitfy-center gap-y-4 flex-col">
+            <FormField
+            control={form.control}
+            name="url"
+            render={({ field }) => (
+              <FormItem>
+             
+                <FormControl>
+                  <FileUploader
+                      onChange={(url) => field.onChange(url)}
+                  label = "upload your attachments"
+                  />
+                </FormControl>
+                <FormMessage className="text-red-1" />
+              </FormItem>
+            )}
           />
+           <Button type="submit"  className = "w-full" >
+           Save
+
+            </Button>
+          </form>
+            </Form>
 
           <div className="text-xs text-muted-foreground mt-4">
             Add anything your students might need to complete the course.
