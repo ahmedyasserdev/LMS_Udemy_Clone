@@ -1,13 +1,13 @@
 "use server";
 
-
-import { CourseWithProgressWithCategory } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "../db";
 import {
   CreateCourseParams,
   UpdateCourseParams,
   UpdateCourseAttachmentsParams,
+  CourseWithProgressWithCategory,
+  GetCourses,
 } from "@/types";
 import { revalidatePath } from "next/cache";
 import Mux from "@mux/mux-node";
@@ -227,72 +227,62 @@ export const unpublishCourse = async (courseId: string) => {
   }
 };
 
-
-
-
-
-type GetCourses = {
-  userId: string;
-  title?: string;
-  categoryId?: string;
-};
-
-
-export const getCourses = async ({
-  userId,
-  title,
-  categoryId
-}: GetCourses)  => {
+export const getCourses = async ({ userId, title, categoryId }: GetCourses) => {
   try {
     const courses = await db.course.findMany({
-      where : {
-        isPublished : true ,
-        title : {contains : title},
-        categoryId
-      },
-
-      include : {
-        category : true ,
-        chapters :{
-          where : {isPublished : true},
-          select : {id : true}
+      where: {
+        isPublished: true,
+        title: {
+          contains: title,
+          mode: "insensitive",
         },
-        purchases : {
-          where : {userId}
+        categoryId,
+      },
+      include: {
+        category: true,
+        chapters: {
+          where: {
+            isPublished: true,
+          },
+          select: {
+            id: true,
+          },
+        },
+        purchases: {
+          where: {
+            userId,
+          },
         },
       },
-
-      orderBy : {
-        createdAt : "desc"
-      }
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
-
-    const coursesWithProgress  = await Promise.all(
-      courses.map(async course => {
-        if (course.purchases.length ===0 ) {
+    const coursesWithProgress = await Promise.all(
+      courses.map(async (course) => {
+        if (course.purchases.length === 0) {
           return {
             ...course,
-            purchases : null
-          }
+            progress: null,
+          };
         }
 
-
-        const progressPercentage = await getProgress({userId , courseId :  course.id})
+        const progressPercentage = await getProgress({
+          userId,
+          courseId: course.id,
+        });
 
         return {
-          ...course ,
-          userProgress :  progressPercentage
-        }
+          ...course,
+          progress: progressPercentage,
+        };
       })
-    )
+    );
 
-   return  coursesWithProgress
-   
-
-  }catch (error){
+    return coursesWithProgress;
+  } catch (error) {
     console.log("[GET_COURSES]", error);
-    return []
-
+    return [];
   }
-}
+};

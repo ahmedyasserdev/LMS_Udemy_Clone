@@ -25,7 +25,6 @@
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-slot": "^1.0.2",
     "@tanstack/react-table": "^8.17.3",
-    "@uploadthing/react": "^6.6.0",
     "add": "^2.0.6",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -44,7 +43,6 @@
     "shadcn-ui": "^0.8.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "uploadthing": "^6.12.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

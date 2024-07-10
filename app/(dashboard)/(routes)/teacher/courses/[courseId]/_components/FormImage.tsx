@@ -111,19 +111,21 @@ const FormImage = ({ courseId, initialData }: CoreFormProps) => {
             control={form.control}
             name="imageUrl"
             render={({ field }) => (
-              <FormItem>
+              <FormItem  >
              
                 <FormControl>
                   <FileUploader
                     onChange={(url : any) => field.onChange(url)}
                   label = "upload an image"
+
                   />
                 </FormControl>
                 <FormMessage className="text-red-1" />
               </FormItem>
             )}
           />
-           <Button type="submit" className="w-full" >
+           <Button type="submit" 
+           className="w-full" >
              Save
             </Button>
           </form>

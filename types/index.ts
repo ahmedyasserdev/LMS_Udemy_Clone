@@ -60,3 +60,9 @@ export type CourseWithProgressWithCategory = Course & {
   chapters: { id: string }[];
   progress: number | null;
 };
+
+export type GetCourses = {
+  userId: string;
+  title?: string;
+  categoryId?: string;
+};

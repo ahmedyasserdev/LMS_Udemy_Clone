@@ -1,12 +1,28 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     typescript: {
-        ignoreBuildErrors: true,
-      },
-    images:
-    {
-        domains: ['utfs.io', 'img.clerk.com' , "res.cloudinary.com"]
+      ignoreBuildErrors: true,
     },
-};
-
-export default nextConfig;
+    images: {
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: 'utfs.io',
+         
+        },
+        {
+          protocol: 'https',
+          hostname: 'img.clerk.com',
+         
+        },
+        {
+          protocol: 'https',
+          hostname: 'res.cloudinary.com',
+         
+        },
+      ],
+    },
+  };
+  
+  export default nextConfig;
+  

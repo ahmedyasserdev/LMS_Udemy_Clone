@@ -17,14 +17,14 @@ const FileUploader = ({
  
   const onUpload = (result: any) => {
     onChange(result.info.secure_url);
-    console.log(result)
+    
   };
 
   return (
     <CldUploadWidget uploadPreset="gbuzpxkh" onUpload={onUpload}>
     {({ open }) => {
       return (
-        <Button type="button"  variant = "outline" onClick={() => open()} className="">
+        <Button type="button"  variant = "outline" onClick={() => open()} className="w-full">
           <Plus className="h-4 w-4 mr-2" />
             {label}
         </Button>
