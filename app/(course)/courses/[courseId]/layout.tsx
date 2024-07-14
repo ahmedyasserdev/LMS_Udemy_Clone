@@ -35,7 +35,7 @@ const CourseLayout = async ({
 
   return (
     <div className="h-full">
-          <div className="md:pl-80 fixed inset-y-0 w-full z-50 h-[80px]" >
+          <div className="md:pl-64 fixed inset-y-0 w-full z-50 h-[80px]" >
             <CourseNavbar 
              course  = {course}
              progressCount = {progressCount}
@@ -43,7 +43,7 @@ const CourseLayout = async ({
           </div>
 
 
-        <div className="hidden md:flex h-full w-80 fixed inset-y-0 z-50">
+        <div className="max-md:hidden  h-full  w-64 fixed inset-y-0 z-50">
           <CourseSidebar
             course = {course}
             progressCount = {progressCount} 
@@ -52,10 +52,11 @@ const CourseLayout = async ({
 
         </div>
       
-      
-      
-      <main className="md:pl-80 h-full">{children}</main>
-    </div>
+        <main className="md:pl-64 pt-[80px] h-full">
+        {children}
+      </main>
+
+     </div>
   );
 };
 

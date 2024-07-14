@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import Mux from "@mux/mux-node";
 import { z } from "zod";
 import { handleAuthorization } from "../utils";
+import { Attachment, Chapter } from "@prisma/client";
 
 const ChapterSchema = z.object({
   id: z.string(),
@@ -31,7 +32,6 @@ const { video } = new Mux({
   tokenId: process.env.MUX_TOKEN_ID!,
   tokenSecret: process.env.MUX_TOKEN_SECRET!,
 });
-
 
 export const createChapter = async ({
   courseId,
@@ -241,8 +241,6 @@ export const publishChapter = async ({
   }
 };
 
-
-
 export const unpublishChapter = async ({
   chapterId,
   courseId,
@@ -250,12 +248,8 @@ export const unpublishChapter = async ({
   chapterId: string;
   courseId: string;
 }) => {
-
   try {
     await handleAuthorization(courseId);
-
-
-   
 
     const chapterToUnpublish = await db.chapter.update({
       where: { id: chapterId, courseId },
@@ -264,8 +258,9 @@ export const unpublishChapter = async ({
       },
     });
 
-
-    const publishedChapterInCourse = await db.chapter.findMany({where : {courseId , isPublished : true}});
+    const publishedChapterInCourse = await db.chapter.findMany({
+      where: { courseId, isPublished: true },
+    });
 
     if (!publishedChapterInCourse.length) {
       await db.course.update({
@@ -274,9 +269,111 @@ export const unpublishChapter = async ({
       });
     }
 
-
     return JSON.parse(JSON.stringify(chapterToUnpublish));
   } catch (error) {
     console.log("[CHAPTER_UNPUBLISH]", error);
   }
-}
+};
+
+export const getChapter = async ({
+  chapterId,
+  userId,
+  courseId,
+}: {
+  chapterId: string;
+  userId: string;
+  courseId: string;
+}) => {
+  try {
+    const isPurchased = await db.purchase.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId,
+        },
+      },
+    });
+
+    const course = await db.course.findUnique({
+      where: {
+        id: courseId,
+        isPublished: true,
+      },
+
+      select: {
+        price: true,
+      },
+    });
+
+    const chapter = await db.chapter.findUnique({
+      where: {
+        id: chapterId,
+        isPublished: true,
+      },
+    });
+
+    if (!chapter || !course) throw new Error("Chapter or Course not found");
+
+    let muxData = null;
+    let attachments: Attachment[] = [];
+    let nextChapter: Chapter | null = null;
+
+    if (isPurchased) {
+      attachments = await db.attachment.findMany({
+        where: {
+          courseId,
+        },
+      });
+    }
+
+    if (chapter.isFree || isPurchased) {
+      muxData = await db.muxData.findUnique({
+        where: {
+          chapterId,
+        },
+      });
+
+      nextChapter = await db.chapter.findFirst({
+        where: {
+          id: chapterId,
+          isPublished: true,
+          position: {
+            gt: chapter?.position,
+          },
+        },
+        orderBy: {
+          position: "asc",
+        },
+      });
+    }
+
+    const userProgress = await db.userProgress.findUnique({
+      where: {
+        userId_chapterId: {
+          userId,
+          chapterId,
+        },
+      },
+    });
+    return {
+      chapter,
+      course,
+      muxData,
+      attachments,
+      nextChapter,
+      userProgress,
+      isPurchased,
+    };
+  } catch (error) {
+    console.log("[GET_CHAPTER]", error);
+    return {
+      chapter: null,
+      course: null,
+      muxData: null,
+      attachments: [],
+      nextChapter: null,
+      userProgress: null,
+      isPurchased: null,
+    };
+  }
+};

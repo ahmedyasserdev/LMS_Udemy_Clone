@@ -127,7 +127,7 @@ const ChapterFormVideo = ({ courseId, initialData  , chapterId}: ChapterFormProp
             </Form>
 
 
-            <div className="text-xs text-muted-foreground mt-4"> Upload this chatper&apos; vidoe</div>
+            <div className="text-xs text-muted-foreground mt-4"> Upload this chatper&apos;s vidoe</div>
 
 
        </div>
