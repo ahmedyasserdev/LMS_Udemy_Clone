@@ -83,6 +83,6 @@ export const purchaseTheCourse = async (courseId: string) => {
     return { url: session.url };
   } catch (error) {
     console.log("[PURCHASING_COURSE]", error);
-    throw error; // Re-throw the error to handle it at a higher level if necessary
+    throw error; 
   }
 };

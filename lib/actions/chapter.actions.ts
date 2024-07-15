@@ -335,16 +335,17 @@ export const getChapter = async ({
 
       nextChapter = await db.chapter.findFirst({
         where: {
-          id: chapterId,
-          isPublished: true,
-          position: {
-            gt: chapter?.position,
-          },
+            courseId,
+            isPublished: true,
+            position: {
+                gt: chapter?.position,
+            },
         },
         orderBy: {
-          position: "asc",
+            position: "asc",
         },
-      });
+    });
+
     }
 
     const userProgress = await db.userProgress.findUnique({

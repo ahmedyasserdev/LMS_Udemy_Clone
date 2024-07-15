@@ -1,4 +1,4 @@
-import { getProgress } from "@/lib/actions/get-progress";
+import { getProgress } from "@/lib/actions/progress.actions";
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";

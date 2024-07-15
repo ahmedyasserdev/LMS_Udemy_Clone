@@ -13,7 +13,7 @@ import { revalidatePath } from "next/cache";
 import Mux from "@mux/mux-node";
 import { handleAuthorization } from "../utils";
 import { z } from "zod";
-import { getProgress } from "./get-progress";
+import { getProgress } from "./progress.actions";
 
 const courseSchema = z.object({
   title: z.string().min(1),
