@@ -57,7 +57,7 @@ export type  ChapterFormProps  = {
 
 export type CourseWithProgressWithCategory = Course & {
   category: Category | null;
-  chapters: { id: string }[];
+  chapters: Chapter[];
   progress: number | null;
 };
 
@@ -66,3 +66,9 @@ export type GetCourses = {
   title?: string;
   categoryId?: string;
 };
+
+
+export type DashboardCourses = {
+  completedCourses : CourseWithProgressWithCategory[];
+  coursesInProgress : CourseWithProgressWithCategory[]
+} 

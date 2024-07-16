@@ -1,19 +1,19 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { db } from "../db";
 import {
   CreateCourseParams,
   UpdateCourseParams,
   UpdateCourseAttachmentsParams,
-  CourseWithProgressWithCategory,
   GetCourses,
+  CourseWithProgressWithCategory,
 } from "@/types";
 import { revalidatePath } from "next/cache";
 import Mux from "@mux/mux-node";
 import { handleAuthorization } from "../utils";
 import { z } from "zod";
 import { getProgress } from "./progress.actions";
+import {DashboardCourses} from "@/types"
 
 const courseSchema = z.object({
   title: z.string().min(1),
@@ -286,3 +286,53 @@ export const getCourses = async ({ userId, title, categoryId }: GetCourses) => {
     return [];
   }
 };
+
+
+
+
+export const getDashboardCourses = async (userId : string)  : Promise<DashboardCourses> => {
+
+  try {
+    const purchasedCourses = await db.purchase.findMany({
+      where : {
+        userId
+      },
+      select : {
+        course : {
+            include : {
+              category : true,
+              chapters :{ where : {isPublished : true}}
+            }
+        }
+      }
+    })
+
+
+    const courses = purchasedCourses.map((purchase) => purchase.course) as CourseWithProgressWithCategory[]
+
+
+      for (let course of courses) {
+        const progress = await  getProgress({courseId : course.id  , userId})
+        course['progress'] = progress;
+      }
+
+
+
+
+      const completedCourses = courses.filter((course) => course.progress === 100)
+      const coursesInProgress = courses.filter((course) => (course.progress ?? 0) < 100)
+
+      return {
+        completedCourses ,
+        coursesInProgress ,
+      }
+
+  }catch (error) {
+    console.log("[GET_DASHBOARD_COUSES]" , error)
+    return {
+      completedCourses : [],
+      coursesInProgress : [],
+    }
+  }
+  
+}

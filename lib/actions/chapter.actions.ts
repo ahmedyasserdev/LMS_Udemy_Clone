@@ -1,6 +1,6 @@
 "use server";
 
-import { createChapterParams, updateChapterProps } from "@/types";
+import { createChapterParams, updateChapterProps ,  } from "@/types";
 import { db } from "../db";
 import { revalidatePath } from "next/cache";
 import Mux from "@mux/mux-node";
@@ -378,3 +378,4 @@ export const getChapter = async ({
     };
   }
 };
+
