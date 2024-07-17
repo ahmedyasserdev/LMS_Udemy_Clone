@@ -14,6 +14,7 @@ import { handleAuthorization } from "../utils";
 import { z } from "zod";
 import { getProgress } from "./progress.actions";
 import {DashboardCourses} from "@/types"
+import { isTeacher } from "../teacher";
 
 const courseSchema = z.object({
   title: z.string().min(1),
@@ -25,6 +26,7 @@ const courseSchema = z.object({
 export const createCourse = async ({ title }: CreateCourseParams) => {
   try {
     const userId = await handleAuthorization();
+        if (!isTeacher(userId)) throw new Error("Unauthorized");  
 
     const course = await db.course.create({
       data: {
@@ -46,6 +48,7 @@ export const updateCourse = async ({
 }: UpdateCourseParams) => {
   try {
     const userId = await handleAuthorization();
+    if (!isTeacher(userId)) throw new Error("Unauthorized");  
 
     const course = await db.course.update({
       where: {
@@ -71,7 +74,8 @@ export const updateCourseAttachments = async ({
   path,
 }: UpdateCourseAttachmentsParams) => {
   try {
-    await handleAuthorization(courseId);
+   const userId =  await handleAuthorization(courseId);
+    if (!isTeacher(userId)) throw new Error("Unauthorized");  
 
     const attachment = await db.attachment.create({
       data: {
@@ -97,7 +101,8 @@ export const DeleteAttachment = async ({
   courseId: string;
 }) => {
   try {
-    await handleAuthorization(courseId);
+  const userId =   await handleAuthorization(courseId);
+    if (!isTeacher(userId)) throw new Error("Unauthorized");  
 
     const attachmentToDelete = await db.attachment.delete({
       where: {
@@ -120,6 +125,7 @@ const { video } = new Mux({
 export const deleteCourse = async (courseId: string) => {
   try {
     const userId = await handleAuthorization();
+    if (!isTeacher(userId)) throw new Error("Unauthorized");  
 
     const course = await db.course.findUnique({
       where: { id: courseId, userId },
@@ -151,6 +157,7 @@ export const deleteCourse = async (courseId: string) => {
 export const publishCourse = async (courseId: string) => {
   try {
     const userId = await handleAuthorization();
+    if (!isTeacher(userId)) throw new Error("Unauthorized");  
 
     const course = await db.course.findUnique({
       where: {
@@ -196,6 +203,7 @@ export const publishCourse = async (courseId: string) => {
 export const unpublishCourse = async (courseId: string) => {
   try {
     const userId = await handleAuthorization();
+    if (!isTeacher(userId)) throw new Error("Unauthorized");  
 
     const course = await db.course.findUnique({
       where: {

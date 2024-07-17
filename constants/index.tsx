@@ -23,9 +23,5 @@ export const teacherRoutes = [
         label: "Analytics",
         href: "/teacher/analytics",
     },
-    {
-        icon: Users,
-        label: "Manage Users",
-        href: "/teacher/users",
-    }
+   
 ]
